@@ -1,0 +1,38 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Compiled binaries
+*.exe
+*.out
+*.app
+
+# Java
+*.class
+
+# C/C++
+*.o
+*.a
+*.so
+*.dylib
+*.dSYM/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-workspace
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
