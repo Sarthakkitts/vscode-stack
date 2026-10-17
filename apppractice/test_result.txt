@@ -1,0 +1,29 @@
+Tested threads.c with Banker's algorithm example:
+Input:
+5 processes, 3 resources
+Allocation:
+0 1 0
+2 0 0
+3 0 2
+2 1 1
+0 0 2
+Max:
+7 5 3
+3 2 2
+9 0 2
+2 2 2
+4 3 3
+Available: 3 3 2
+
+Output:
+Need matrix:
+7 4 3
+1 2 2
+6 0 0
+0 1 1
+4 3 1
+
+System is in SAFE state.
+Safe sequence: P1 -> P3 -> P4 -> P0 -> P2
+
+Program works correctly; no modifications needed.

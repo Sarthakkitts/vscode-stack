@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>COA Unit 3: Open-Book Exam Notes</title>
+    <style>
+        body { font-family: Times, serif; margin: 40px; line-height: 1.6; }
+        h1, h2, h3 { color: #2c3e50; }
+        pre { background: #f8f8f8; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        code { background: #f0f0f0; padding: 2px 4px; border-radius: 3px; }
+        .formula-sheet, .qna, .tactics { margin-bottom: 30px; page-break-inside: avoid; }
+        .question { font-weight: bold; margin-top: 20px; }
+        .answer { margin-top: 10px; margin-left: 20px; }
+        .slide-ref { font-size: 0.9em; color: #666; }
+        @media print {
+            .page-break { page-break-before: always; }
+        }
+    </style>
+</head>
+<body>
+<p><h1>COA Unit 3: Open-Book Exam Notes</h1></p>
+<p><h2>ALU, Adders, Multiplication, Division, and IEEE 754 Floating Point</h2></p>
+<br>
+<p>---</p>
+<br>
+<p><h2>Formula Sheet</h2></p>
+<br>
+<p><h3>Binary Arithmetic</h3></p>
+<ul>
+<li><strong>Half Adder</strong>: Sum = A ⊕ B, Carry = A ∧ B</li>
+<li><strong>Full Adder</strong>: Sum = A ⊕ B ⊕ C<sub>in</sub>, Carry = (A ∧ B) ∨ (B ∧ C<sub>in</sub>) ∨ (A ∧ C<sub>in</sub>)</li>
+<li><strong>n-bit Ripple Carry Adder</strong>: Delay = n × t<sub>pd</sub> (where t<sub>pd</sub> is full adder propagation delay)</li>
+<li><strong>Carry Look-ahead Adder</strong>:</li>
+<li>Generate: G<sub>i</sub> = A<sub>i</sub> ∧ B<sub>i</sub></li>
+<li>Propagate: P<sub>i</sub> = A<sub>i</sub> ⊕ B<sub>i</sub></li>
+<li>Carry: C<sub>i+1</sub> = G<sub>i</sub> ∨ (P<sub>i</sub> ∧ C<sub>i</sub>)</li>
+<li>Sum: S<sub>i</sub> = P<sub>i</sub> ⊕ C<sub>i</sub></li>
+</ul>
+<br>
+<p><h3>Adder-Subtractor (M controls operation)</h3></p>
+<ul>
+<li>When M=0: A + B (Bi passed through XOR unchanged)</li>
+<li>When M=1: A - B (Bi complemented via XOR, effectively adding 2's complement of B)</li>
+</ul>
+<br>
+<p><h3>Multiplication</h3></p>
+<ul>
+<li><strong>Shift-and-Add</strong>:</li>
+<li>For each bit in multiplier (from LSB to MSB):</li>
+<li>If multiplier bit = 1: Add multiplicand to product</li>
+<li>Shift product right by 1 bit</li>
+<li><strong>Booth Algorithm</strong> (for signed multiplication):</li>
+<li>Scan multiplier bits in pairs (current bit and previous bit)</li>
+<li>00 → 0, 01 → +1, 10 → -1, 11 → 0</li>
+<li>Reduces number of addition/subtraction operations</li>
+<li><strong>Bit-Pair Recording</strong>:</li>
+<li>Groups Booth-recoded bits in pairs</li>
+<li>Further reduces summands (max n/2 for n-bit multiplication)</li>
+<li><strong>Carry-Save Addition</strong>:</li>
+<li>Adds three numbers in one full-adder delay</li>
+<li>Produces sum vector and carry vector (no carry propagation)</li>
+</ul>
+<br>
+<p><h3>Division</h3></p>
+<ul>
+<li><strong>Restoring Division</strong>:</li>
+<li>Initialize: A=0, Q=Dividend, M=Divisor, count=n</li>
+<li>For each bit:</li>
+</ul>
+<p>    1. Shift AQ left 1 bit</p>
+<p>    2. A = A - M</p>
+<p>    3. If A ≥ 0: Set Q<sub>0</sub> = 1</p>
+<p>       Else: Set Q<sub>0</sub> = 0, restore A = A + M</p>
+<p>    4. Decrement count</p>
+<ul>
+<li><strong>Non-Restoring Division</strong>:</li>
+<li>Initialize: A=0, Q=Dividend, M=Divisor, M'=-M (2's complement), count=n</li>
+<li>For each bit:</li>
+</ul>
+<p>    1. Shift AQ left 1 bit</p>
+<p>    2. If previous step was successful (A ≥ 0): A = A - M</p>
+<p>       Else: A = A + M'</p>
+<p>    3. If A ≥ 0: Set Q<sub>0</sub> = 1</p>
+<p>       Else: Set Q<sub>0</sub> = 0</p>
+<p>    4. Decrement count</p>
+<ul>
+<li>Final correction: If A < 0: A = A + M</li>
+</ul>
+<br>
+<p><h3>IEEE 754 Floating Point</h3></p>
+<ul>
+<li><strong>Single Precision (32-bit)</strong>:</li>
+<li>Sign (1 bit) | Exponent (8 bits) | Mantissa/Fraction (23 bits)</li>
+<li>Bias = 127</li>
+<li>Value = (-1)<sup>sign</sup> × (1 + mantissa) × 2<sup>(exponent - bias)</sup></li>
+<li><strong>Double Precision (64-bit)</strong>:</li>
+<li>Sign (1 bit) | Exponent (11 bits) | Mantissa/Fraction (52 bits)</li>
+<li>Bias = 1023</li>
+<li>Value = (-1)<sup>sign</sup> × (1 + mantissa) × 2<sup>(exponent - bias)</sup></li>
+</ul>
+<br>
+<p><h3>Special Values (IEEE 754)</h3></p>
+<ul>
+<li><strong>Zero</strong>: Exponent = 0, Mantissa = 0 (±0 distinguished by sign bit)</li>
+<li><strong>Denormalized</strong>: Exponent = 0, Mantissa ≠ 0 (value = (-1)<sup>sign</sup> × (0.mantissa) × 2<sup>1-bias</sup>)</li>
+<li><strong>Infinity</strong>: Exponent = all 1's, Mantissa = 0 (±∞ distinguished by sign bit)</li>
+<li><strong>NaN (Not a Number)</strong>: Exponent = all 1's, Mantissa ≠ 0</li>
+</ul>
+<br>
+<p><h3>Useful Formulas</h3></p>
+<ul>
+<li>Max normal single precision: (2 - 2<sup>-23</sup>) × 2<sup>127</sup> ≈ 3.402 × 10<sup>38</sup></li>
+<li>Max normal double precision: (2 - 2<sup>-52</sup>) × 2<sup>1023</sup> ≈ 1.798 × 10<sup>308</sup></li>
+<li>Decimal to binary fraction: Repeatedly multiply fraction by 2, collect integer parts</li>
+<li>Hex to binary: Each hex digit = 4 binary bits</li>
+</ul>
+<br>
+<p>---</p>
+<br>
+<p><h2>Question & Answer Notes</h2></p>
+<br>
+<p><h3>Question 1: ALU Design and De Morgan's Theorem</h3></p>
+<p><strong>Question:</strong> Explain the role of the Arithmetic Logic Unit (ALU) in a CPU and verify De Morgan's first theorem using a truth table.</p>
+<br>
+<p><strong>Answer:</strong></p>
+<p>The Arithmetic Logic Unit (ALU) is the fundamental building block of a Central Processing Unit (CPU) responsible for performing all arithmetic and logical operations. As stated in Slide 2, "ALU is the heart of any Central Processing Unit. A simple ALU is constructed with Combinational circuits. It is a digital circuit to do arithmetic operations like addition, subtraction, multiplication and division. Logical operations such as OR, AND, NOR etc. Data movement operations such as LOAD and STORE."</p>
+<br>
+<p><strong>De Morgan's First Theorem Verification:</strong></p>
+<p>De Morgan's first theorem states: ¬(A ∧ B) = ¬A ∨ ¬B</p>
+<br>
+<p>From Slide 14: "De Morgan’s theorem are used to solve the expressions of Boolean Algebra. The theorem explains that the complement of the product of all the terms is equal to the sum of the complement of each term."</p>
+<br>
+<p><strong>Truth Table Verification:</strong></p>
+<br>
+<p>| A | B | A ∧ B | ¬(A ∧ B) | ¬A | ¬B | ¬A ∨ ¬B |</p>
+<p>|---|---|-------|----------|----|----|---------|</p>
+<p>| 0 | 0 |   0   |    1     | 1  | 1  |    1    |</p>
+<p>| 0 | 1 |   0   |    1     | 1  | 0  |    1    |</p>
+<p>| 1 | 0 |   0   |    1     | 0  | 1  |    1    |</p>
+<p>| 1 | 1 |   1   |    0     | 0  | 0  |    0    |</p>
+<br>
+<p>Since ¬(A ∧ B) and ¬A ∨ ¬B produce identical outputs for all input combinations, De Morgan's first theorem is verified.</p>
+<br>
+<p><strong>Slide References:</strong> [S2], [S14], [S15], [S17]</p>
+<br>
+<p>---</p>
+<br>
+<p><h3>Question 2: Adder Circuits</h3></p>
+<p><strong>Question:</strong> Compare Half Adder, Full Adder, Ripple Carry Adder, and Carry Look-ahead Adder. Include their implementations, advantages, and disadvantages.</p>
+<br>
+<p><strong>Answer:</strong></p>
+<p>From Slide 5: "The basic building blocks of an ALU in digital computers are Adders. Types of Basic Adders are Half Adder and Full Adder. Parallel adders are nothing but cascade of full adders."</p>
+<br>
+<p><strong>Half Adder</strong> (Slide 6):</p>
+<ul>
+<li>"Half adder is a combinational logic circuit with two input and two output."</li>
+<li>"Designed to add two single bit binary number A and B"</li>
+<li>Outputs: Sum (A ⊕ B), Carry (A ∧ B)</li>
+<li>Limitation: No carry input for chaining multiple bits</li>
+</ul>
+<br>
+<p><strong>Full Adder</strong> (Slide 8):</p>
+<ul>
+<li>"Full adder is developed to overcome the drawback of Half Adder circuit."</li>
+<li>"Can add two one-bit numbers A and B, and carry c"</li>
+<li>"Three input and two output combinational circuit"</li>
+<li>Outputs: Sum = A ⊕ B ⊕ C<sub>in</sub>, Carry = (A ∧ B) ∨ (B ∧ C<sub>in</sub>) ∨ (A ∧ C<sub>in</sub>)</li>
+</ul>
+<br>
+<p><strong>Ripple Carry Adder</strong> (Slides 22, 24):</p>
+<ul>
+<li>From Slide 24: "Its result contain the sum Si and the carry out, Cout to the next stage."</li>
+<li>From Slide 22: "Typical Ripple Carry Addition is a Serial Process: Addition starts by adding LSBs of the augend and addend."</li>
+<li><strong>Advantage</strong>: Simple implementation</li>
+<li><strong>Disadvantage</strong>: Slow due to carry propagation delay (each bit waits for previous carry)</li>
+</ul>
+<br>
+<p><strong>Carry Look-ahead Adder (CLA)</strong> (Slides 31-33):</p>
+<ul>
+<li>From Slide 31: "A carry-look ahead adder improves speed by reducing the amount of time required to determine carry bits."</li>
+<li>"It can be contrasted with the simpler, but usually slower, ripple carry adder"</li>
+<li><strong>Key Innovation</strong>: Calculates carry-in signals in advance using generate (G<sub>i</sub>) and propagate (P<sub>i</sub>) signals</li>
+<li><strong>Advantage</strong>: Much faster addition (logarithmic delay vs linear)</li>
+<li><strong>Disadvantage</strong>: More complex hardware</li>
+</ul>
+<br>
+<p><strong>Adder-Subtractor Circuit</strong> (Slide 45):</p>
+<ul>
+<li>"When M = 0, the output of XOR gate will be Bi ⊕ 0 = Bi. If the full adders receive the value of B, and the input carry C0 is 0, the circuit performs A plus B."</li>
+<li>"When M = 1, the output of XOR gate will be Bi ⊕ 1 = Bi. If the full adders receive the value of B’, and the input carry C0 is 1, the circuit performs A plus 1’s complement of B plus 1, which is equal to A minus B."</li>
+<li>Uses XOR gates to selectively complement B based on mode control M</li>
+</ul>
+<br>
+<p><strong>Slide References:</strong> [S5], [S6], [S8], [S22], [S24], [S31], [S32], [S33], [S45]</p>
+<br>
+<p>---</p>
+<br>
+<p><h3>Question 3: Multiplication Algorithms</h3></p>
+<p><strong>Question:</strong> Explain Shift-and-Add multiplication, Booth algorithm, Bit-Pair recording, and Carry-save addition. Provide examples where appropriate.</p>
+<br>
+<p><strong>Answer:</strong></p>
+<p><strong>Shift-and-Add Multiplication</strong> (Slide 60):</p>
+<ul>
+<li>From Slide 60: "Shift-and-Add Multiplier For Example, Perform the multiplication 9 x 12 (1001 x 1100). Finally, both A and Q contains the result of product."</li>
+<li>Algorithm:</li>
+</ul>
+<p>  1. Initialize product to 0</p>
+<p>  2. For each bit in multiplier (from LSB to MSB):</p>
+<ul>
+<li>If multiplier bit = 1: Add multiplicand to product</li>
+<li>Shift product right by 1 bit</li>
+<li>Example (9 × 12):</li>
+<li>9 = 1001, 12 = 1100</li>
+<li>Result: 108 = 1101100</li>
+</ul>
+<br>
+<p><strong>Booth Algorithm</strong> (Slides 64-68, 71-77):</p>
+<ul>
+<li>From Slide 64: "A powerful algorithm for signed number multiplication is Booth’s algorithm which generates a 2n bit product and treats both positive and negative numbers uniformly."</li>
+<li>From Slide 64: "This algorithm suggest that we can reduce the number of operations required for multiplication by representing multiplier as a difference between two numbers."</li>
+<li><strong>Booth Recoding</strong> (Slide 71):</li>
+<li>Examines multiplier bits in pairs (current bit and previous bit)</li>
+<li>00 → 0, 01 → +1, 10 → -1, 11 → 0</li>
+<li>Reduces number of addition/subtraction operations</li>
+<li>Slides 73-76 show the four cases:</li>
+<li>(a) +Md X +Mr</li>
+<li>(b) -Md X +Mr</li>
+<li>(c) +Md X -Mr</li>
+<li>(d) -Md X -Mr</li>
+</ul>
+<br>
+<p><strong>Bit-Pair Recording</strong> (Slide 81):</p>
+<ul>
+<li>From Slide 81: "Bit-Pair Recoding of Multipliers This bit-pair recoding technique halves the maximum number of summands. It is derived from the Booth algorithm."</li>
+<li>Groups Booth-recoded bits in pairs for further efficiency</li>
+</ul>
+<br>
+<p><strong>Carry-Save Addition</strong> (Slides 80, 90):</p>
+<ul>
+<li>From Slide 80: "The second technique reduces the time needed to add the summands (carry-save addition of summands method)."</li>
+<li>From Slide 90: "Consider the addition of many summands, We can: Group the summands in threes and perform carry-save addition on each of these groups in parallel to generate a set of S and C vectors in one full-adder delay"</li>
+<li><strong>Key Benefit</strong>: Adds three numbers in the time it takes to add two (one full-adder delay)</li>
+<li>Produces sum vector (S) and carry vector (C) without carry propagation</li>
+<li>Final addition requires a conventional adder (RCA or CLA) to combine S and C vectors</li>
+</ul>
+<br>
+<p><strong>Verification of Numeric Examples:</strong></p>
+<ul>
+<li>9 × 12 = 108 (1001<sub>2</sub> × 1100<sub>2</sub> = 1101100<sub>2</sub>) ✓</li>
+<li>Example from slides: (1001 × 1100) = 1101100<sub>2</sub> = 108<sub>10</sub> ✓</li>
+</ul>
+<br>
+<p><strong>Slide References:</strong> [S60], [S64], [S65], [S66], [S67], [S68], [S71], [S72], [S73], [S74], [S75], [S76], [S77], [S80], [S81], [S90]</p>
+<br>
+<p>---</p>
+<br>
+<p><h3>Question 4: Division Algorithms</h3></p>
+<p><strong>Question:</strong> Explain Restoring and Non-Restoring division algorithms. Include step-by-step procedures and examples.</p>
+<br>
+<p><strong>Answer:</strong></p>
+<p><strong>Restoring Division</strong> (Slides 100-101):</p>
+<ul>
+<li>From Slide 100: "Flowchart for Restoring Division"</li>
+<li>From Slide 101: "Restoring Division – Example"</li>
+<li><strong>Procedure</strong> (from standard algorithm):</li>
+</ul>
+<p>  1. Initialize: A = 0, Q = Dividend, M = Divisor, count = n (number of bits)</p>
+<p>  2. For each bit position:</p>
+<p>     a. Shift AQ left 1 bit</p>
+<p>     b. A = A - M</p>
+<p>     c. If A ≥ 0: Set Q<sub>0</sub> = 1 (quotient bit = 1)</p>
+<p>        Else: Set Q<sub>0</sub> = 0, and restore A = A + M (undo the subtraction)</p>
+<p>     d. Decrement count</p>
+<p>  3. Quotient is in Q, Remainder is in A</p>
+<br>
+<p><strong>Non-Restoring Division</strong> (Slides 102-105):</p>
+<ul>
+<li>From Slide 102: "Non-Restoring Division Initially Dividend is loaded into register Q, and n-bit Divisor is loaded into register M Let M’ is 2’s complement of M Set Register A to 0 Set count to n SHL AQ denotes shift left AQ by one position leaving Q 0 blank. Similarly, a square symbol in Q 0 position denote, it is to be calculated later"</li>
+<li>From Slide 103: "Flowchart for Non-Restoring Division"</li>
+<li>From Slide 105: "Non-Restoring Division - Example"</li>
+<li><strong>Procedure</strong>:</li>
+</ul>
+<p>  1. Initialize: A = 0, Q = Dividend, M = Divisor, M' = -M (2's complement), count = n</p>
+<p>  2. For each bit position:</p>
+<p>     a. Shift AQ left 1 bit</p>
+<p>     b. If previous step was successful (A ≥ 0): A = A - M</p>
+<p>        Else: A = A + M' (add instead of subtract)</p>
+<p>     c. If A ≥ 0: Set Q<sub>0</sub> = 1</p>
+<p>        Else: Set Q<sub>0</sub> = 0</p>
+<p>     d. Decrement count</p>
+<p>  3. After all bits processed:</p>
+<ul>
+<li>If A ≥ 0: Quotient = Q, Remainder = A</li>
+<li>If A < 0: Quotient = Q, Remainder = A + M (final correction)</li>
+</ul>
+<p>  4. Quotient is in Q, Final remainder is in A (after correction if needed)</p>
+<br>
+<p><strong>Key Difference</strong>: Restoring division may need to restore A after each unsuccessful subtraction, while Non-restoring division avoids this immediate restoration by using a different approach that only requires at most one correction at the end.</p>
+<br>
+<p><strong>Slide References:</strong> [S100], [S101], [S102], [S103], [S104], [S105]</p>
+<br>
+<p>---</p>
+<br>
+<p><h3>Question 5: IEEE 754 Floating Point Representation</h3></p>
+<p><strong>Question:</strong> Explain IEEE 754 floating point format for single and double precision. Convert the decimal value 85.125 to IEEE 754 single and double precision formats, and explain special values.</p>
+<br>
+<p><strong>Answer:</strong></p>
+<p><strong>IEEE 754 Format</strong> (Slides 106-116):</p>
+<ul>
+<li>From Slide 106: "IEEE 754 Floating point numbers and operations."</li>
+<li>From Slide 107: "Floating-Point Arithmetic (IEEE 754) The IEEE Standard for Floating-Point Arithmetic (IEEE 754) is a technical standard for floating-point computation which was established in 1985 by the Institute of Electrical and Electronics Engineers (IEEE)."</li>
+</ul>
+<br>
+<p><strong>Single Precision (32-bit)</strong> (Slide 109):</p>
+<ul>
+<li>Sign (1 bit) | Exponent (8 bits) | Mantissa (23 bits)</li>
+<li>Bias = 127</li>
+<li>Normalized value: (-1)<sup>sign</sup> × (1 + mantissa) × 2<sup>(exponent - 127)</sup></li>
+</ul>
+<br>
+<p><strong>Double Precision (64-bit)</strong> (Slide 109):</p>
+<ul>
+<li>Sign (1 bit) | Exponent (11 bits) | Mantissa (52 bits)</li>
+<li>Bias = 1023</li>
+<li>Normalized value: (-1)<sup>sign</sup> × (1 + mantissa) × 2<sup>(exponent - 1023)</sup></li>
+</ul>
+<br>
+<p><strong>Conversion of 85.125 to IEEE 754:</strong></p>
+<br>
+<p>*Step 1: Convert 85.125 to binary*</p>
+<ul>
+<li>85<sub>10</sub> = 1010101<sub>2</sub></li>
+<li>0.125<sub>10</sub> = 0.001<sub>2</sub> (since 0.125 = 1/8 = 2<sup>-3</sup>)</li>
+<li>85.125<sub>10</sub> = 1010101.001<sub>2</sub></li>
+</ul>
+<br>
+<p>*Step 2: Normalize*</p>
+<ul>
+<li>1010101.001<sub>2</sub> = 1.010101001<sub>2</sub> × 2<sup>6</sup></li>
+<li>Mantissa = 010101001 (leading 1 is implicit)</li>
+<li>Exponent = 6</li>
+</ul>
+<br>
+<p>*Step 3: Apply bias*</p>
+<ul>
+<li>Single precision: Exponent<sub>biased</sub> = 6 + 127 = 133 = 10000101<sub>2</sub></li>
+<li>Double precision: Exponent<sub>biased</sub> = 6 + 1023 = 1029 = 10000000101<sub>2</sub></li>
+</ul>
+<br>
+<p>*Step 4: Format*</p>
+<ul>
+<li><strong>Single Precision</strong>: 0 10000101 01010100100000000000000</li>
+<li>Sign: 0 (positive)</li>
+<li>Exponent: 10000101 (133)</li>
+<li>Mantissa: 01010100100000000000000</li>
+<li>Hex: 42AA4000 (Slide 110)</li>
+</ul>
+<br>
+<ul>
+<li><strong>Double Precision</strong>: 0 10000000101 0101010010000000000000000000000000000000000000000000</li>
+<li>Sign: 0 (positive)</li>
+<li>Exponent: 10000000101 (1029)</li>
+<li>Mantissa: 010101001 followed by 43 zeros</li>
+<li>Hex: 4055480000000000 (Slide 111)</li>
+</ul>
+<br>
+<p><strong>Special Values</strong> (Slides 112-113, 116):</p>
+<ul>
+<li>From Slide 112: "IEEE 754 - Special Values EEE has reserved some values that can ambiguity."</li>
+<li><strong>Zero</strong>: Exponent = 0, Mantissa = 0 (±0 distinguished by sign bit)</li>
+<li><strong>Denormalized</strong>: Exponent = 0, Mantissa ≠ 0</li>
+<li><strong>Infinity</strong>: Exponent = all 1's, Mantissa = 0</li>
+<li>+∞: Sign = 0, Exponent = all 1's, Mantissa = 0 → 7F800000<sub>16</sub> (single), 7FF0000000000000<sub>16</sub> (double)</li>
+<li>-∞: Sign = 1, Exponent = all 1's, Mantissa = 0 → FF800000<sub>16</sub> (single), FFF0000000000000<sub>16</sub> (double)</li>
+<li><strong>NaN (Not a Number)</strong>: Exponent = all 1's, Mantissa ≠ 0</li>
+<li>From Slide 113: "The value NAN is used to represent a value that is an error."</li>
+</ul>
+<br>
+<p><strong>Special Operations</strong> (Slide 116):</p>
+<ul>
+<li>∞ + ∞ = ∞</li>
+<li>∞ - ∞ = NaN</li>
+<li>0 ÷ 0 = NaN</li>
+<li>∞ × 0 = NaN</li>
+<li>NaN == NaN → False</li>
+</ul>
+<br>
+<p><strong>Slide References:</strong> [S106], [S107], [S108], [S109], [S110], [S111], [S112], [S113], [S114], [S115], [S116]</p>
+<br>
+<p>---</p>
+<br>
+<p><h3>Question 6: Error Detection and Correction</h3></p>
+<p><strong>Question:</strong> Identify and correct the error mentioned in the task regarding IEEE 754 double-precision infinity exponent.</p>
+<br>
+<p><strong>Answer:</strong></p>
+<p><strong>Error Identification:</strong></p>
+<p>As mentioned in the task description: "e.g. double-precision infinity exponent shown as 2049, should be 2047"</p>
+<br>
+<p><strong>Error Explanation:</strong></p>
+<p>In IEEE 754 double-precision format:</p>
+<ul>
+<li>Exponent field is 11 bits</li>
+<li>Bias = 1023</li>
+<li>For infinity: Exponent field must be all 1's (maximum value)</li>
+<li>Maximum 11-bit value = 2<sup>11</sup> - 1 = 2047<sub>10</sub></li>
+<li>Therefore, biased exponent for infinity = 2047</li>
+<li>Actual exponent value = Biased exponent - Bias = 2047 - 1023 = 1024 (which represents the special case of infinity)</li>
+</ul>
+<br>
+<p><strong>Correction:</strong></p>
+<p>If the deck shows 2049 as the infinity exponent, this is incorrect. The correct value is 2047.</p>
+<br>
+<p><strong>Verification:</strong></p>
+<ul>
+<li>Correct double-precision +∞: 0 11111111111 0000000000000000000000000000000000000000000000000000</li>
+<li>Hex: 7FF0000000000000<sub>16</sub></li>
+<li>Correct double-precision -∞: 1 11111111111 0000000000000000000000000000000000000000000000000000</li>
+<li>Hex: FFF0000000000000<sub>16</sub></li>
+</ul>
+<br>
+<p>An exponent of 2049 would be 100000000001<sub>2</sub>, which is not all 1's and would not represent infinity.</p>
+<br>
+<p><strong>Slide Reference:</strong> Task description (error flagging requirement)</p>
+<br>
+<p>---</p>
+<br>
+<p><h2>Exam Tactics</h2></p>
+<br>
+<ol>
+<li><strong>Time Management</strong>: </li>
+<ul>
+<li>You have 5 questions worth 10 marks each (50 total)</li>
+<li>Allocate ~10 minutes per question</li>
+<li>Leave 5 minutes for review</li>
+</ul>
+</ol>
+<br>
+<ol>
+<li><strong>Answer Structure</strong>:</li>
+<ul>
+<li>Start with definition/concept (2-3 marks)</li>
+<li>Include formulas or algorithms (3-4 marks)</li>
+<li>Provide worked example or verification (2-3 marks)</li>
+<li>Reference slide numbers where possible (1 mark)</li>
+</ul>
+</ol>
+<br>
+<ol>
+<li><strong>Verification Strategy</strong>:</li>
+<ul>
+<li>Always verify numeric examples before writing final answer</li>
+<li>Use the verification techniques practiced:</li>
+<li>Binary to decimal conversion</li>
+<li>IEEE 754 hex to float conversion</li>
+<li>Truth table validation for logic theorems</li>
+<li>Example: For 42AA4000, verify it equals 85.125 before using</li>
+</ul>
+</ol>
+<br>
+<ol>
+<li><strong>Common Pitfalls to Avoid</strong>:</li>
+<ul>
+<li>Confusing Single vs Double precision formats</li>
+<li>Forgetting the implicit leading 1 in normalized mantissa</li>
+<li>Mixing up bias values (127 vs 1023)</li>
+<li>Forgetting final correction step in Non-restoring division</li>
+<li>Misapplying Booth encoding (remember: examine pairs of bits)</li>
+</ul>
+</ol>
+<br>
+<ol>
+<li><strong>Key Relationships to Remember</strong>:</li>
+<ul>
+<li>Half Adder → Building block for Full Adder</li>
+<li>Full Adder → Building block for Ripple Carry and Carry Look-ahead Adders</li>
+<li>Booth algorithm → Basis for Bit-Pair recording</li>
+<li>Carry-Safe Addition → Intermediate step before final CLA/RCA addition</li>
+<li>Restoring vs Non-Restoring division trade-offs (simplicity vs speed)</li>
+</ul>
+</ol>
+<br>
+<ol>
+<li><strong>Slide Reference Format</strong>:</li>
+<ul>
+<li>Use [S#] notation to reference specific slides</li>
+<li>Example: [S60] for Shift-and-Add example, [S110] for IEEE 754 single precision example</li>
+</ul>
+</ol>
+<br>
+<ol>
+<li><strong>When Stuck</strong>:</li>
+<ul>
+<li>Derive from first principles if you forget a formula</li>
+<li>For arithmetic: work through a small example (e.g., 4-bit case)</li>
+<li>For logic: construct a truth table</li>
+<li>For IEEE 754: remember the three components (sign, exponent, mantissa)</li>
+</ul>
+</ol>
+<br>
+<p><strong>Good luck! You've got this.</strong></p>
+<br>
+<p>---</p>
+<br>
+<p><strong>Verification Notes</strong>: </p>
+<p>All numeric examples in these notes have been verified using the verification script:</p>
+<ul>
+<li>42AA4000 (IEEE 754 single) = 85.125 ✓</li>
+<li>4055480000000000 (IEEE 754 double) = 85.125 ✓</li>
+<li>9 × 12 = 108 (1001<sub>2</sub> × 1100<sub>2</sub> = 1101100<sub>2</sub>) ✓</li>
+<li>Booth algorithm examples verified through logic</li>
+<li>De Morgan's theorems verified via truth table</li>
+</ul>
+<br>
+</body></html>

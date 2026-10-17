@@ -4,7 +4,7 @@ struct node{
     int data;
     struct node *left;
     struct node *right;
-}  node;
+};
 struct node *createnode(int value){
     struct node *newnode=(struct node *)malloc(sizeof(struct node));
     newnode->data=value;
@@ -15,7 +15,6 @@ struct node *createnode(int value){
 struct node *insert(struct node * root,int value){
     if(root==NULL){
         return createnode(value);
-        
     }
     else if(value<root->data){
         root->left=insert(root->left,value);
@@ -24,23 +23,29 @@ struct node *insert(struct node * root,int value){
         root->right=insert(root->right,value);
     }
     return root;
-    
+}
+struct node *delete (struct node * root,int value ){
+    if (root == NULL){
+        return root;
+    }
+    // TODO: implement deletion
+    return root;
 }
 void inorder(struct node *root){
     if (root!=NULL){
         inorder(root->left);
         printf("%d",root->data);
         inorder(root->right);
-
     }
 }
 int main(){
     struct node *root=NULL;
     root=insert(root,10);
-    insert(root,20);
-    insert(root,30);
-    insert(root,40);
-    insert(root,50);
+    root=insert(root,20);
+    root=insert(root,30);
+    root=insert(root,40);
+    root=insert(root,50);
     printf("Inorder Traversal:");
     inorder(root);
+    return 0;
 }
